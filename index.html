@@ -1,100 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#10111b">
-<title>Auto Caption Studio</title>
-<style>
-:root{color-scheme:dark;--bg:#10111b;--panel:#1b1d2b;--muted:#a7abc0;--accent:#a78bfa}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,Arial,sans-serif}
-header{padding:22px 18px;background:linear-gradient(130deg,#30215c,#15172b)}
-header h1{margin:0;font-size:25px}
-header p{margin:7px 0 0;color:#ded7ff;font-size:13px}
-main{max-width:650px;margin:auto;padding:16px}
-.card{background:var(--panel);border:1px solid #303247;border-radius:17px;padding:16px;margin-bottom:15px}
-h2{font-size:17px;margin:0 0 13px}
-label{display:block;font-size:13px;color:var(--muted);margin:13px 0 7px}
-input,select,button{width:100%;padding:13px;border-radius:10px;border:1px solid #3c3e55;background:#25273a;color:white;font:inherit}
-button{background:var(--accent);color:#171126;font-weight:750;border:0;cursor:pointer;margin-top:12px}
-button:disabled{opacity:.5}
-video{width:100%;max-height:450px;background:#090a10;border-radius:12px;margin-top:12px}
-#stage{position:relative}
-#captionPreview{position:absolute;left:5%;right:5%;bottom:9%;text-align:center;font-size:clamp(19px,5vw,32px);font-weight:900;white-space:pre-wrap;overflow-wrap:anywhere;text-shadow:2px 3px 3px #000;pointer-events:none}
-#status{font-size:13px;color:#d6ccff;line-height:1.6;overflow-wrap:anywhere}
-.small{font-size:12px;color:var(--muted);line-height:1.6}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#transcript{min-height:110px;resize:vertical}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 28px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auto Caption Studio</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 18px; background: #10121a; color: #f4f5fb;
+      font-family: Arial, sans-serif;
+    }
+    main { max-width: 850px; margin: auto; }
+    h1 { margin-bottom: 6px; }
+    .muted { color: #aeb4c8; line-height: 1.5; }
+    .panel {
+      background: #1b1e2b; border: 1px solid #303548;
+      border-radius: 14px; padding: 16px; margin: 16px 0;
+    }
+    label { display: block; margin: 14px 0 7px; font-weight: bold; }
+    input, select, textarea, button {
+      width: 100%; padding: 12px; border-radius: 9px;
+      border: 1px solid #444b62; font: inherit;
+    }
+    input, select, textarea { background: #10121a; color: white; }
+    textarea { min-height: 150px; resize: vertical; }
+    button {
+      background: #7766ff; color: white; border: 0;
+      font-weight: bold; margin-top: 12px; cursor: pointer;
+    }
+    button:disabled { opacity: .5; cursor: wait; }
+    .secondary { background: #34394b; }
+    #status { color: #b9c4ff; overflow-wrap: anywhere; }
+    #previewBox {
+      position: relative; width: 100%; background: black;
+      overflow: hidden; border-radius: 12px;
+    }
+    #previewVideo { width: 100%; display: block; max-height: 65vh; }
+    #captionOverlay {
+      position: absolute; left: 5%; width: 90%; text-align: center;
+      font-size: clamp(20px, 4vw, 38px); font-weight: 900;
+      line-height: 1.2; overflow-wrap: anywhere;
+      white-space: pre-wrap; pointer-events: none;
+      text-shadow: 2px 3px 4px #000;
+    }
+    .pos-top { top: 8%; }
+    .pos-middle { top: 43%; transform: translateY(-50%); }
+    .pos-bottom { bottom: 9%; }
+    .style-viral { color: white; -webkit-text-stroke: 1px black; }
+    .style-karaoke { color: #ffe45e; }
+    .style-clean { color: white; background: #0009; padding: 8px; border-radius: 8px; }
+    .style-neon { color: #62fff3; text-shadow: 0 0 8px #00bfff, 2px 3px 4px black; }
+    .style-boxed { color: white; background: #ed2456; padding: 9px; border-radius: 8px; }
+    .style-gradient {
+      color: #ffe45e; -webkit-text-stroke: 1px #3d176e;
+      text-shadow: 2px 3px 0 #3d176e;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .small { font-size: 13px; }
+    @media (max-width: 520px) {
+      body { padding: 10px; }
+      .row { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
 </head>
 <body>
-<header>
-<h1>✦ Auto Caption Studio</h1>
-<p>Turn your videos into caption-ready Shorts.</p>
-</header>
 <main>
-<section class="card">
-<h2>① Choose your video</h2>
-<label for="videoFile">Video from your phone</label>
-<input id="videoFile" type="file" accept="video/*">
-<div id="stage">
-<video id="video" controls playsinline hidden></video>
-<div id="captionPreview"></div>
-</div>
-<p class="small">Your selected video is previewed locally in this browser.</p>
-</section>
+  <h1>Auto Caption Studio</h1>
+  <p class="muted">Upload a video, generate speech captions, customize their appearance, and export a captioned video.</p>
 
-<section class="card">
-<h2>② Design your captions</h2>
-<label for="style">Caption style</label>
-<select id="style">
-<option value="viral">Viral Shorts — bold white and yellow</option>
-<option value="karaoke">Karaoke — highlighted words</option>
-<option value="clean">Clean — simple white subtitles</option>
-<option value="neon">Neon — purple glow</option>
-<option value="boxed">Pop — black caption background</option>
-<option value="gradient">Creator — colourful text</option>
-</select>
-<label for="position">Caption position</label>
-<select id="position">
-<option value="bottom">Bottom</option>
-<option value="middle">Middle</option>
-<option value="top">Top</option>
-</select>
-<label for="sample">Preview caption text</label>
-<input id="sample" value="THIS IS YOUR NEXT BIG VIDEO!" maxlength="160">
-<button id="previewBtn">Preview caption design</button>
-</section>
+  <section class="panel">
+    <label for="videoFile">1. Choose your video</label>
+    <input id="videoFile" type="file" accept="video/*">
 
-<section class="card">
-<h2>③ Speech and transcription</h2>
-<label for="language">Spoken language</label>
-<select id="language">
-<option value="auto">Auto-detect where supported</option>
-<option value="hi">Hindi</option>
-<option value="hinglish">Hindi + Hinglish</option>
-<option value="en">English</option>
-</select>
-<p class="small">Transcription will run on your device when a compatible speech-recognition model is available. This first version does not yet include that model.</p>
-<label for="audioFile">Choose an audio file</label>
-<input id="audioFile" type="file" accept="video/*,audio/*">
+    <div id="previewBox" style="margin-top:14px">
+      <video id="previewVideo" controls playsinline></video>
+      <div id="captionOverlay" class="pos-bottom style-viral"></div>
+    </div>
 
-<button id="loadEngine">Load speech model</button>
-<button id="transcribeAudio">Generate transcript</button>
- <label for="transcript">Transcript / edit your recognized words</label>
-<textarea id="transcript" placeholder="Your transcript will appear here in a later version..."></textarea>
-</section>
+    <p class="muted small">The video stays in your browser. Large videos may use a lot of phone memory.</p>
+  </section>
 
-<section class="card">
-<h2>④ Export</h2>
-<p class="small">The design preview is ready. Embedded caption rendering and MP4 export will be enabled in the next development stage.</p>
-<button id="exportBtn">Check export readiness</button>
-<p id="status" role="status">Choose a video to begin.</p>
-</section>
+  <section class="panel">
+    <h2>2. Generate captions</h2>
+    <p class="muted small">The first model download can be large. Keep this page open and use a stable internet connection.</p>
+    <button id="loadEngine">Load AI speech model</button>
+    <button id="transcribeAudio" class="secondary">Generate captions from video</button>
+    <p id="status" role="status">Choose a video to begin.</p>
+
+    <label for="language">Speech language</label>
+    <select id="language">
+      <option value="auto">Automatic detection</option>
+      <option value="hi">Hindi</option>
+      <option value="en">English</option>
+    </select>
+    <p class="muted small">Hinglish speech may be recognized imperfectly. Review the transcript before exporting.</p>
+
+    <label for="transcript">3. Edit the transcript</label>
+    <textarea id="transcript" placeholder="Your recognized words will appear here. You can correct them before exporting."></textarea>
+  </section>
+
+  <section class="panel">
+    <h2>4. Customize captions</h2>
+    <div class="row">
+      <div>
+        <label for="captionStyle">Design</label>
+        <select id="captionStyle">
+          <option value="viral">Bold viral</option>
+          <option value="karaoke">Karaoke yellow</option>
+          <option value="clean">Clean subtitle</option>
+          <option value="neon">Neon glow</option>
+          <option value="boxed">Red box</option>
+          <option value="gradient">Golden highlight</option>
+        </select>
+      </div>
+      <div>
+        <label for="captionPosition">Position</label>
+        <select id="captionPosition">
+          <option value="bottom">Bottom</option>
+          <option value="middle">Middle</option>
+          <option value="top">Top</option>
+        </select>
+      </div>
+    </div>
+    <label for="fontSize">Caption size</label>
+    <select id="fontSize">
+      <option value="small">Small</option>
+      <option value="medium" selected>Medium</option>
+      <option value="large">Large</option>
+    </select>
+    <p class="muted small">Play the preview to see captions follow their recognized timestamps.</p>
+  </section>
+
+  <section class="panel">
+    <h2>5. Export captioned video</h2>
+    <p class="muted small">Captions are drawn directly onto the exported video. Export is real-time and requires enough free memory and battery.</p>
+    <button id="exportVideo">Export captioned video</button>
+    <a id="downloadLink" hidden download="captioned-video.webm" style="display:block;margin-top:14px;color:#b9c4ff">Download your captioned video</a>
+  </section>
 </main>
-<footer>Auto Caption Studio · Browser-based prototype</footer>
+
 <script type="module" src="./transcribe.js"></script>
 </body>
 </html>
