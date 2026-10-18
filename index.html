@@ -78,7 +78,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 28p
 <option value="en">English</option>
 </select>
 <p class="small">Transcription will run on your device when a compatible speech-recognition model is available. This first version does not yet include that model.</p>
-<label for="transcript">Transcript / edit your recognized words</label>
+<label for="audioFile">Choose an audio file</label>
+<input id="audioFile" type="file" accept="audio/*">
+
+<button id="loadEngine">Load speech model</button>
+<button id="transcribeAudio">Generate transcript</button>
+ <label for="transcript">Transcript / edit your recognized words</label>
 <textarea id="transcript" placeholder="Your transcript will appear here in a later version..."></textarea>
 </section>
 
@@ -90,47 +95,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 28p
 </section>
 </main>
 <footer>Auto Caption Studio · Browser-based prototype</footer>
-<script>
-const $=id=>document.getElementById(id);
-let objectUrl=null;
-$('videoFile').addEventListener('change',()=>{
- const file=$('videoFile').files[0];
- if(!file)return;
- if(objectUrl)URL.revokeObjectURL(objectUrl);
- objectUrl=URL.createObjectURL(file);
- $('video').src=objectUrl;
- $('video').hidden=false;
- $('status').textContent='Video loaded locally: '+file.name;
-});
-function renderCaption(){
- const el=$('captionPreview');
- el.textContent=$('sample').value;
- el.style.bottom=$('position').value==='bottom'?'9%':'auto';
- el.style.top=$('position').value==='top'?'9%':$('position').value==='middle'?'45%':'auto';
- el.style.transform=$('position').value==='middle'?'translateY(-50%)':'none';
- el.style.background='transparent';
- el.style.padding='5px';
- el.style.color='white';
- el.style.textShadow='2px 3px 3px #000';
- const styles={
-  viral:()=>{el.style.color='#ffe34d';el.style.webkitTextStroke='1px #171717'},
-  karaoke:()=>{el.style.color='#63ff93';el.style.textShadow='2px 3px 4px #000'},
-  clean:()=>{el.style.color='#fff';el.style.fontWeight='500';el.style.textShadow='0 2px 5px #000'},
-  neon:()=>{el.style.color='#e9b4ff';el.style.textShadow='0 0 8px #be56ff,0 0 17px #853bff'},
-  boxed:()=>{el.style.background='rgba(0,0,0,.85)';el.style.borderRadius='8px';el.style.color='#fff'},
-  gradient:()=>{el.style.color='#ff9de2';el.style.webkitTextStroke='1px #3d1555'}
- };
- el.style.webkitTextStroke='0';
- (styles[$('style').value]||styles.viral)();
-}
-$('previewBtn').addEventListener('click',renderCaption);
-$('style').addEventListener('change',renderCaption);
-$('position').addEventListener('change',renderCaption);
-$('sample').addEventListener('input',renderCaption);
-$('exportBtn').addEventListener('click',()=>{
- $('status').textContent='Export is not implemented yet. This prototype previews designs but does not yet transcribe speech or produce a captioned MP4.';
-});
-renderCaption();
-</script>
+<script type="module" src="./transcribe.js"></script>
 </body>
 </html>
