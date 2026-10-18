@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10111b">
+<title>Auto Caption Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#10111b;--panel:#1b1d2b;--muted:#a7abc0;--accent:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#fff;font-family:system-ui,Arial,sans-serif}
+header{padding:22px 18px;background:linear-gradient(130deg,#30215c,#15172b)}
+header h1{margin:0;font-size:25px}
+header p{margin:7px 0 0;color:#ded7ff;font-size:13px}
+main{max-width:650px;margin:auto;padding:16px}
+.card{background:var(--panel);border:1px solid #303247;border-radius:17px;padding:16px;margin-bottom:15px}
+h2{font-size:17px;margin:0 0 13px}
+label{display:block;font-size:13px;color:var(--muted);margin:13px 0 7px}
+input,select,button{width:100%;padding:13px;border-radius:10px;border:1px solid #3c3e55;background:#25273a;color:white;font:inherit}
+button{background:var(--accent);color:#171126;font-weight:750;border:0;cursor:pointer;margin-top:12px}
+button:disabled{opacity:.5}
+video{width:100%;max-height:450px;background:#090a10;border-radius:12px;margin-top:12px}
+#stage{position:relative}
+#captionPreview{position:absolute;left:5%;right:5%;bottom:9%;text-align:center;font-size:clamp(19px,5vw,32px);font-weight:900;white-space:pre-wrap;overflow-wrap:anywhere;text-shadow:2px 3px 3px #000;pointer-events:none}
+#status{font-size:13px;color:#d6ccff;line-height:1.6;overflow-wrap:anywhere}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#transcript{min-height:110px;resize:vertical}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 20px 28px}
+</style>
+</head>
+<body>
+<header>
+<h1>✦ Auto Caption Studio</h1>
+<p>Turn your videos into caption-ready Shorts.</p>
+</header>
+<main>
+<section class="card">
+<h2>① Choose your video</h2>
+<label for="videoFile">Video from your phone</label>
+<input id="videoFile" type="file" accept="video/*">
+<div id="stage">
+<video id="video" controls playsinline hidden></video>
+<div id="captionPreview"></div>
+</div>
+<p class="small">Your selected video is previewed locally in this browser.</p>
+</section>
+
+<section class="card">
+<h2>② Design your captions</h2>
+<label for="style">Caption style</label>
+<select id="style">
+<option value="viral">Viral Shorts — bold white and yellow</option>
+<option value="karaoke">Karaoke — highlighted words</option>
+<option value="clean">Clean — simple white subtitles</option>
+<option value="neon">Neon — purple glow</option>
+<option value="boxed">Pop — black caption background</option>
+<option value="gradient">Creator — colourful text</option>
+</select>
+<label for="position">Caption position</label>
+<select id="position">
+<option value="bottom">Bottom</option>
+<option value="middle">Middle</option>
+<option value="top">Top</option>
+</select>
+<label for="sample">Preview caption text</label>
+<input id="sample" value="THIS IS YOUR NEXT BIG VIDEO!" maxlength="160">
+<button id="previewBtn">Preview caption design</button>
+</section>
+
+<section class="card">
+<h2>③ Speech and transcription</h2>
+<label for="language">Spoken language</label>
+<select id="language">
+<option value="auto">Auto-detect where supported</option>
+<option value="hi">Hindi</option>
+<option value="hinglish">Hindi + Hinglish</option>
+<option value="en">English</option>
+</select>
+<p class="small">Transcription will run on your device when a compatible speech-recognition model is available. This first version does not yet include that model.</p>
+<label for="transcript">Transcript / edit your recognized words</label>
+<textarea id="transcript" placeholder="Your transcript will appear here in a later version..."></textarea>
+</section>
+
+<section class="card">
+<h2>④ Export</h2>
+<p class="small">The design preview is ready. Embedded caption rendering and MP4 export will be enabled in the next development stage.</p>
+<button id="exportBtn">Check export readiness</button>
+<p id="status" role="status">Choose a video to begin.</p>
+</section>
+</main>
+<footer>Auto Caption Studio · Browser-based prototype</footer>
+<script>
+const $=id=>document.getElementById(id);
+let objectUrl=null;
+$('videoFile').addEventListener('change',()=>{
+ const file=$('videoFile').files[0];
+ if(!file)return;
+ if(objectUrl)URL.revokeObjectURL(objectUrl);
+ objectUrl=URL.createObjectURL(file);
+ $('video').src=objectUrl;
+ $('video').hidden=false;
+ $('status').textContent='Video loaded locally: '+file.name;
+});
+function renderCaption(){
+ const el=$('captionPreview');
+ el.textContent=$('sample').value;
+ el.style.bottom=$('position').value==='bottom'?'9%':'auto';
+ el.style.top=$('position').value==='top'?'9%':$('position').value==='middle'?'45%':'auto';
+ el.style.transform=$('position').value==='middle'?'translateY(-50%)':'none';
+ el.style.background='transparent';
+ el.style.padding='5px';
+ el.style.color='white';
+ el.style.textShadow='2px 3px 3px #000';
+ const styles={
+  viral:()=>{el.style.color='#ffe34d';el.style.webkitTextStroke='1px #171717'},
+  karaoke:()=>{el.style.color='#63ff93';el.style.textShadow='2px 3px 4px #000'},
+  clean:()=>{el.style.color='#fff';el.style.fontWeight='500';el.style.textShadow='0 2px 5px #000'},
+  neon:()=>{el.style.color='#e9b4ff';el.style.textShadow='0 0 8px #be56ff,0 0 17px #853bff'},
+  boxed:()=>{el.style.background='rgba(0,0,0,.85)';el.style.borderRadius='8px';el.style.color='#fff'},
+  gradient:()=>{el.style.color='#ff9de2';el.style.webkitTextStroke='1px #3d1555'}
+ };
+ el.style.webkitTextStroke='0';
+ (styles[$('style').value]||styles.viral)();
+}
+$('previewBtn').addEventListener('click',renderCaption);
+$('style').addEventListener('change',renderCaption);
+$('position').addEventListener('change',renderCaption);
+$('sample').addEventListener('input',renderCaption);
+$('exportBtn').addEventListener('click',()=>{
+ $('status').textContent='Export is not implemented yet. This prototype previews designs but does not yet transcribe speech or produce a captioned MP4.';
+});
+renderCaption();
+</script>
+</body>
+</html>
